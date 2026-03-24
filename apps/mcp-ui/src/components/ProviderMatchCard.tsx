@@ -7,6 +7,11 @@ import { colors, spacing } from "../shared/design-tokens";
 export interface ProviderMatchCardProps {
   provider: ProviderMatch;
   urgency?: "emergency" | "soon" | "planned";
+  expanded?: boolean;
+  license_type?: string;
+  license_expiry?: string;
+  hours_today?: string;
+  data_freshness_at?: string;
 }
 
 function getPhone(provider: ProviderMatch): string | null {
@@ -16,13 +21,34 @@ function getPhone(provider: ProviderMatch): string | null {
   return phone?.value ?? null;
 }
 
+function getDaysAgo(isoDate: string): number {
+  const then = new Date(isoDate);
+  const now = new Date();
+  return Math.floor((now.getTime() - then.getTime()) / (1000 * 60 * 60 * 24));
+}
+
 function formatPriceRange(range: ProviderMatch["price_range"]): string {
   if (!range) return "Contact for quote";
   return `$${range.low}\u2013$${range.high}`;
 }
 
-export function ProviderMatchCard({ provider, urgency = "planned" }: ProviderMatchCardProps) {
+export function ProviderMatchCard({
+  provider,
+  urgency = "planned",
+  expanded = false,
+  license_type,
+  license_expiry,
+  hours_today,
+  data_freshness_at,
+}: ProviderMatchCardProps) {
   const phone = getPhone(provider);
+
+  const staleWarning = (() => {
+    if (!data_freshness_at) return null;
+    const days = getDaysAgo(data_freshness_at);
+    if (days <= 7) return null;
+    return `Last updated ${days} days ago`;
+  })();
 
   return (
     <div
@@ -79,6 +105,39 @@ export function ProviderMatchCard({ provider, urgency = "planned" }: ProviderMat
         serviceType={provider.trade_category}
         urgency={urgency}
       />
+
+      {expanded && (
+        <div
+          style={{
+            borderTop: `1px solid ${colors.borderDefault}`,
+            paddingTop: spacing.sm,
+            display: "flex",
+            flexDirection: "column",
+            gap: spacing.xs,
+            fontSize: 13,
+            color: colors.textSecondary,
+          }}
+        >
+          {license_type && (
+            <div>License Type: {license_type}</div>
+          )}
+          {license_expiry && (
+            <div>Expires: {license_expiry}</div>
+          )}
+
+          <div>
+            {hours_today
+              ? `Business Hours: ${hours_today}`
+              : "Hours not available"}
+          </div>
+
+          {staleWarning && (
+            <div style={{ color: colors.textMuted, fontStyle: "italic" }}>
+              {staleWarning}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

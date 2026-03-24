@@ -70,4 +70,56 @@ describe("ProviderMatchCard", () => {
     expect(screen.getByText(/4\.8/)).toBeInTheDocument();
     expect(screen.getByText(/42 reviews/)).toBeInTheDocument();
   });
+
+  it("defaults to collapsed — no expanded details visible", () => {
+    render(<ProviderMatchCard provider={makeProvider()} license_type="CAC" hours_today="8am–5pm" />);
+    expect(screen.queryByText(/License Type/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Business Hours/)).not.toBeInTheDocument();
+  });
+
+  it("shows expanded details when expanded={true}", () => {
+    render(
+      <ProviderMatchCard
+        provider={makeProvider()}
+        expanded
+        license_type="CAC"
+        license_expiry="2026-12-31"
+        hours_today="8am–5pm"
+      />,
+    );
+    expect(screen.getByText("License Type: CAC")).toBeInTheDocument();
+    expect(screen.getByText("Expires: 2026-12-31")).toBeInTheDocument();
+    expect(screen.getByText("Business Hours: 8am–5pm")).toBeInTheDocument();
+  });
+
+  it("shows 'Hours not available' when expanded but no hours_today", () => {
+    render(
+      <ProviderMatchCard provider={makeProvider()} expanded />,
+    );
+    expect(screen.getByText("Hours not available")).toBeInTheDocument();
+  });
+
+  it("shows stale data warning when data_freshness_at is > 7 days old", () => {
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+    render(
+      <ProviderMatchCard
+        provider={makeProvider()}
+        expanded
+        data_freshness_at={thirtyDaysAgo}
+      />,
+    );
+    expect(screen.getByText(/Last updated 30 days ago/)).toBeInTheDocument();
+  });
+
+  it("does not show stale warning when data is fresh", () => {
+    const yesterday = new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString();
+    render(
+      <ProviderMatchCard
+        provider={makeProvider()}
+        expanded
+        data_freshness_at={yesterday}
+      />,
+    );
+    expect(screen.queryByText(/Last updated/)).not.toBeInTheDocument();
+  });
 });
