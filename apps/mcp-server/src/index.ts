@@ -3,27 +3,40 @@ import type { ServiceSearchInput, Env } from "./tools/service-search";
 import { handleProviderProfile } from "./tools/provider-profile";
 import { handleHomeProfile } from "./tools/home-profile";
 import { handleJobHistory } from "./tools/job-history";
+import { handleMcpRequest } from "./mcp/server";
+import type { McpRequest } from "./mcp/server";
 import { createIntentLlmCaller } from "./lib/anthropic";
 import { createClient } from "@supabase/supabase-js";
+
+function buildEnv(rawEnv?: Record<string, string>): Env {
+  return {
+    SUPABASE_URL: rawEnv?.SUPABASE_URL ?? "",
+    SUPABASE_ANON_KEY: rawEnv?.SUPABASE_ANON_KEY ?? "",
+    ANTHROPIC_API_KEY: rawEnv?.ANTHROPIC_API_KEY ?? "",
+    GOOGLE_GEOCODING_API_KEY: rawEnv?.GOOGLE_GEOCODING_API_KEY ?? "",
+  };
+}
 
 export default {
   async fetch(request: Request, rawEnv?: Record<string, string>): Promise<Response> {
     if (request.method === "POST") {
-      const body = (await request.json()) as {
-        tool?: string;
-        params?: Record<string, unknown>;
-      };
+      const body = (await request.json()) as Record<string, unknown>;
 
-      const params = body.params ?? {};
+      // MCP protocol requests — have a "method" field like "tools/list" or "tools/call"
+      if (typeof body.method === "string" && body.method.startsWith("tools/")) {
+        const env = buildEnv(rawEnv);
+        const supabase = createClient(env.SUPABASE_URL, env.SUPABASE_ANON_KEY);
+        const callLlm = createIntentLlmCaller(env.ANTHROPIC_API_KEY);
+        const result = await handleMcpRequest(body as McpRequest, env, supabase as any, callLlm);
+        return Response.json(result);
+      }
+
+      // Legacy requests — have a "tool" field
+      const params = (body.params ?? {}) as Record<string, unknown>;
 
       switch (body.tool) {
         case "service_search": {
-          const env: Env = {
-            SUPABASE_URL: rawEnv?.SUPABASE_URL ?? "",
-            SUPABASE_ANON_KEY: rawEnv?.SUPABASE_ANON_KEY ?? "",
-            ANTHROPIC_API_KEY: rawEnv?.ANTHROPIC_API_KEY ?? "",
-            GOOGLE_GEOCODING_API_KEY: rawEnv?.GOOGLE_GEOCODING_API_KEY ?? "",
-          };
+          const env = buildEnv(rawEnv);
           const supabase = createClient(env.SUPABASE_URL, env.SUPABASE_ANON_KEY);
           const callLlm = createIntentLlmCaller(env.ANTHROPIC_API_KEY);
           const result = await handleServiceSearch(params as ServiceSearchInput, env, supabase as any, callLlm);
