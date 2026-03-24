@@ -1,0 +1,5 @@
+export function handleHomeProfile(
+  _input: Record<string, unknown>,
+): { message: string } {
+  return { message: "Coming in Sprint 2" };
+}

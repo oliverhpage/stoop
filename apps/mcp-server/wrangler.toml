@@ -1,0 +1,6 @@
+name = "stoop-mcp-server"
+main = "src/index.ts"
+compatibility_date = "2025-03-15"
+
+[observability]
+enabled = true
