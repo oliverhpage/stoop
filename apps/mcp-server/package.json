@@ -10,17 +10,18 @@
     "lint": "eslint src/"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.80.0",
     "@modelcontextprotocol/sdk": "^1.0.0",
-    "@supabase/supabase-js": "^2.49.0",
-    "@stoop/shared": "*",
-    "@stoop/matching": "*",
     "@stoop/db": "*",
+    "@stoop/matching": "*",
+    "@stoop/shared": "*",
+    "@supabase/supabase-js": "^2.49.0",
     "zod": "^3.24.0"
   },
   "devDependencies": {
-    "wrangler": "^4.0.0",
-    "vitest": "^3.0.0",
+    "@cloudflare/workers-types": "^4.20250310.0",
     "typescript": "^5.7.0",
-    "@cloudflare/workers-types": "^4.20250310.0"
+    "vitest": "^3.0.0",
+    "wrangler": "^4.0.0"
   }
 }
