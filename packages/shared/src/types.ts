@@ -53,3 +53,27 @@ export interface ServiceSearchResult {
   providers: ProviderMatch[];
   request_id: string;
 }
+
+export interface PipelineResult {
+  source: "google_places" | "yelp" | "dbpr";
+  records_processed: number;
+  records_new: number;
+  records_updated: number;
+  errors: number;
+  duration_ms: number;
+}
+
+export interface RawProviderData {
+  name: string;
+  phone: string | null;
+  address: string | null;
+  lat: number;
+  lng: number;
+  categories: string[];
+  avg_rating: number | null;
+  review_count: number;
+  google_place_id?: string;
+  yelp_id?: string;
+  hours?: Record<string, string>;
+  photos?: string[];
+}

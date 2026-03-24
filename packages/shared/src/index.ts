@@ -9,6 +9,8 @@ export {
   type ParsedIntent,
   type ProviderMatch,
   type ServiceSearchResult,
+  type PipelineResult,
+  type RawProviderData,
 } from "./types";
 
 export {
