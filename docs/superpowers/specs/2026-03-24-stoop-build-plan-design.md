@@ -90,7 +90,7 @@ stoop/
 │   │   │   │   └── BookingConfirmation.tsx
 │   │   │   └── shared/      # Shared UI primitives
 │   │   └── tsconfig.json
-│   └── web/                 # Next.js (Ring 2+3)
+│   └── web/                 # Next.js 16 on Vercel (Ring 2+3)
 │       └── (deferred)
 ├── packages/
 │   ├── db/                  # Supabase client, migrations, generated types
@@ -434,9 +434,9 @@ CREATE POLICY events_admin_read ON analytics_events FOR SELECT USING (
   }
 }
 // Note: All 6 categories accepted in schema for forward compatibility.
-// Ring 1 data pipeline only populates HVAC and Plumbing providers.
-// Queries for other categories return: "Coming soon to Miami — we currently
-// cover HVAC and Plumbing. More trades launching soon."
+// Ring 1 data pipeline populates HVAC, Plumbing, and Electrical providers.
+// Queries for cleaning/handyman/roofing return: "Coming soon to Miami — we
+// currently cover HVAC, Plumbing, and Electrical. More trades launching soon."
 // Always return exactly 3 results. If fewer than 3 match filters, relax
 // filters (expand radius, include pending-license providers) before returning fewer.
 
@@ -661,7 +661,7 @@ function rankProvider(provider: Provider, intent: ParsedIntent): number {
 #### Google Places (Weekly)
 
 **Endpoint:** Nearby Search + Place Details
-**Query:** All businesses with `type=plumber` or `type=hvac_contractor` within 30 miles of Miami centroid (25.7617° N, 80.1918° W)
+**Query:** All businesses with `type=plumber`, `type=hvac_contractor`, or `type=electrician` within 30 miles of Miami centroid (25.7617° N, 80.1918° W)
 **Fields extracted:** name, address, phone, rating, review_count, hours, photos, place_id
 **Cost:** ~$0.032/request. Budget: $200/mo. Estimated: ~4,000 requests/week for Miami HVAC + Plumbing.
 **Caching:** Full refresh weekly. Results stored in `providers` table. `data_freshness_at` updated.
@@ -669,7 +669,7 @@ function rankProvider(provider: Provider, intent: ParsedIntent): number {
 #### Yelp Fusion (Weekly)
 
 **Endpoint:** Business Search + Business Reviews
-**Query:** Categories `plumbing` and `hvacr` in Miami metro
+**Query:** Categories `plumbing`, `hvacr`, and `electricians` in Miami metro
 **Fields extracted:** rating, review_count, top 3 review excerpts, categories, photos
 **Rate limit:** 5,000 calls/day free tier — more than sufficient
 **Cost:** $0
@@ -710,9 +710,9 @@ Alert if any source returns 0 records or >10% error rate
 
 Google Places Nearby Search returns max 60 results per query (20/page, 3 pages). To achieve 500+ provider coverage:
 - **Query grid:** 15-mile radius from 12 center points across Miami-Dade + Broward counties (overlapping coverage)
-- **Queries per point:** 2 (one for `plumber`, one for `hvac_contractor`)
-- **Total requests:** 12 centers × 2 trades × 3 pages = 72 requests per weekly refresh + Place Details for new providers
-- **Expected yield:** 300–600 unique providers per trade category after dedup
+- **Queries per point:** 3 (one each for `plumber`, `hvac_contractor`, `electrician`)
+- **Total requests:** 12 centers × 3 trades × 3 pages = 108 requests per weekly refresh + Place Details for new providers
+- **Expected yield:** 700–900 unique providers across 3 trade categories after dedup
 
 #### Geocoding Strategy
 
@@ -917,9 +917,9 @@ crons = [
 - Yelp Fusion pipeline: fetch + merge with Google data
 - DBPR scraper: daily license verification for all Miami providers
 - Deduplication logic (phone + address matching)
-- 500+ Miami HVAC/plumbing providers in database with license status
+- 700+ Miami HVAC/plumbing/electrical providers in database with license status
 
-**Definition of done:** Intent parser passes >90% accuracy on 200-query test set. Database has 500+ Miami providers with verified license status.
+**Definition of done:** Intent parser passes >90% accuracy on 200-query test set. Database has 700+ Miami providers (HVAC + Plumbing + Electrical) with verified license status from DBPR (CAC, CFC, EC license types).
 
 #### Sprint 3: Matching Engine + MCP App Cards v1 (Weeks 5–6)
 
@@ -942,19 +942,19 @@ crons = [
 
 ## 3. Open Questions for Review
 
-These decisions are flagged for your input before implementation begins:
+All resolved (2026-03-24):
 
-1. **MCP Apps rendering:** The spec assumes MCP Apps (React cards inside Claude) are production-ready. If rendering is limited, the fallback is structured text/markdown responses. Should we build the React cards AND the text fallback from Sprint 1, or try React-first?
+1. **MCP Apps rendering:** ✅ Build BOTH React cards AND text/markdown fallback from Sprint 1. React is primary; text fallback ensures the product works even if MCP App rendering is limited.
 
-2. **Contact flow in Ring 1:** The architecture doc describes phone/SMS deep links. For Ring 1, should "Contact Now" simply reveal the provider's phone number (simplest), or should we generate a pre-formatted SMS/call link with job details?
+2. **Contact flow in Ring 1:** ✅ Pre-formatted SMS/call deep link with job details pre-filled (service type, urgency, parsed intent summary). Not just a phone number reveal.
 
-3. **Anonymous vs. authenticated:** Ring 1 allows anonymous `service_search`. When should we push for Supabase Auth sign-up? After first search? After third? Only for home_profile/job_history?
+3. **Auth timing:** ✅ Prompt for Supabase Auth sign-up after the first search. First search is anonymous; results include a "Sign up to save your preferences and service history" prompt. `home_profile` and `job_history` require auth.
 
-4. **Provider data scope for launch:** Miami metro, HVAC + Plumbing only. The PRD mentions 500+ providers. Is that sufficient for a beta, or should we expand to Electrical as a third category from day 1?
+4. **Trade scope:** ✅ Launch with HVAC + Plumbing + Electrical (3 base trades). Data pipeline queries all three from Google Places, Yelp, and DBPR (CAC, CFC, EC license types). Expected 700-900 providers across 3 trades.
 
-5. **Hosting choice for web apps (Ring 2+3):** Architecture doc says Cloudflare Pages for Next.js. This has known edge cases with App Router. Alternative: Vercel (better Next.js support, slightly higher cost). Decide before Ring 2.
+5. **Web app hosting:** ✅ Vercel for all Next.js apps (Ring 2+3). Familiar pattern, better Next.js support, avoids Cloudflare Pages edge cases.
 
-6. **Next.js version:** Architecture doc says Next.js 15. Current latest is Next.js 16. Pin version before Sprint 1.
+6. **Next.js version:** ✅ Use latest (Next.js 16) with App Router.
 
 ---
 
