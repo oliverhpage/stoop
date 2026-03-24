@@ -1,4 +1,6 @@
 export { colors, spacing } from "./shared/design-tokens";
+export { TradeIcon } from "./shared/trade-icons";
+export type { TradeIconProps } from "./shared/trade-icons";
 export { TrustBadge } from "./shared/TrustBadge";
 export type { TrustBadgeProps } from "./shared/TrustBadge";
 export { ProviderMatchCard } from "./components/ProviderMatchCard";

@@ -1,6 +1,7 @@
 import React from "react";
 import type { ProviderMatch } from "@stoop/shared";
 import { TrustBadge } from "../shared/TrustBadge";
+import { TradeIcon } from "../shared/trade-icons";
 import { ContactButton } from "./ContactButton";
 import { colors, spacing } from "../shared/design-tokens";
 
@@ -74,8 +75,10 @@ export function ProviderMatchCard({
 
       <span
         style={{
-          display: "inline-block",
+          display: "inline-flex",
+          alignItems: "center",
           alignSelf: "flex-start",
+          gap: 4,
           padding: `${spacing.xs}px ${spacing.sm}px`,
           borderRadius: 999,
           fontSize: 12,
@@ -83,6 +86,7 @@ export function ProviderMatchCard({
           backgroundColor: colors.surfaceBg,
         }}
       >
+        <TradeIcon trade={provider.trade_category} size={14} />
         {provider.trade_category}
       </span>
 
