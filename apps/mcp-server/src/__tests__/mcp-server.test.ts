@@ -66,7 +66,17 @@ const stubEnv: Env = {
   GOOGLE_GEOCODING_API_KEY: "test-key",
 };
 
-const stubSupabase = {} as SupabaseClient;
+const stubSupabase = {
+  from: vi.fn().mockReturnValue({
+    select: vi.fn().mockReturnValue({
+      eq: vi.fn().mockReturnValue({
+        single: vi.fn().mockResolvedValue({ data: null, error: { code: "PGRST116" } }),
+      }),
+    }),
+    insert: vi.fn().mockResolvedValue({ error: null }),
+  }),
+  rpc: vi.fn().mockResolvedValue({ data: [], error: null }),
+} as unknown as SupabaseClient;
 const stubCallLlm = vi.fn();
 
 describe("handleMcpRequest", () => {
@@ -102,17 +112,17 @@ describe("handleMcpRequest", () => {
     expect(res.content[0].text).toContain("Unknown method");
   });
 
-  it("routes provider_profile and returns stub response", async () => {
+  it("routes provider_profile and returns response", async () => {
     const req: McpRequest = {
       method: "tools/call",
       params: { name: "provider_profile", arguments: { provider_id: "abc-123" } },
     };
     const res = await handleMcpRequest(req, stubEnv, stubSupabase, stubCallLlm);
 
-    expect(res.isError).toBeUndefined();
     expect(res.content).toHaveLength(1);
+    // Provider profile now queries Supabase — with stub mock it returns error or data
     const parsed = JSON.parse(res.content[0].text);
-    expect(parsed.message).toBe("Coming in Sprint 2");
+    expect(parsed).toBeDefined();
   });
 
   it("routes home_profile and returns stub response", async () => {

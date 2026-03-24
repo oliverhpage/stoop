@@ -64,7 +64,7 @@ export async function handleMcpRequest(
       }
 
       case "provider_profile": {
-        const result = handleProviderProfile(args);
+        const result = await handleProviderProfile(args as any, supabase);
         return {
           content: [{ type: "text", text: JSON.stringify(result) }],
         };

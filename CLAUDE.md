@@ -45,7 +45,23 @@ MCP server that matches homeowners with licensed service providers (HVAC, Plumbi
   - Cron-triggered pipeline orchestration
   - 200-query accuracy harness (100% category accuracy)
   - Miami seed script with --dry-run
-- **Next:** Sprint 3 — End-to-end MCP App card rendering in Claude, contact deep links, error states, polish.
+- **Ring 1, Sprint 3** — Complete. 189 tests passing. RING 1 DONE.
+  - MCP SDK integration (tool definitions, protocol handler, Streamable HTTP)
+  - Contact deep links (SMS/call with pre-filled job details + event logging)
+  - ProviderMatchCard expanded state (license details, hours, stale data warnings)
+  - Loading skeletons (pulse animation, configurable count)
+  - Error states (no results, coming soon, generic error)
+  - Auth prompt (sign-up after first search)
+  - Provider profile tool wired to real Supabase data
+  - Trade icons (snowflake, wrench, lightning bolt)
+- **Next:** Ring 2 — Home Profile persistence, PostHog analytics, Provider Dashboard
+
+## Deployment
+1. Create Supabase project, run migrations: `npx supabase db push --linked`
+2. Set Cloudflare secrets: `wrangler secret put SUPABASE_URL` (repeat for all secrets)
+3. Deploy: `cd apps/mcp-server && npx wrangler deploy`
+4. Seed data: `npx tsx scripts/seed-miami.ts`
+5. Test: invoke `service_search` from Claude with Stoop MCP server URL
 
 ## Architecture Decisions
 - **3 trades:** HVAC + Plumbing + Electrical for Miami launch
