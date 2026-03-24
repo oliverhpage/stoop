@@ -1,0 +1,2 @@
+// @stoop/db — placeholder
+export {};

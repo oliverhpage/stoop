@@ -1,0 +1,26 @@
+{
+  "name": "@stoop/mcp-server",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "lint": "eslint src/"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "@supabase/supabase-js": "^2.49.0",
+    "@stoop/shared": "*",
+    "@stoop/matching": "*",
+    "@stoop/db": "*",
+    "zod": "^3.24.0"
+  },
+  "devDependencies": {
+    "wrangler": "^4.0.0",
+    "vitest": "^3.0.0",
+    "typescript": "^5.7.0",
+    "@cloudflare/workers-types": "^4.20250310.0"
+  }
+}

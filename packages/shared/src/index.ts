@@ -1,0 +1,2 @@
+// @stoop/shared — placeholder
+export {};
