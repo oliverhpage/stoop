@@ -29,9 +29,23 @@ MCP server that matches homeowners with licensed service providers (HVAC, Plumbi
 - All database tables defined in `supabase/migrations/`. Never modify schema outside migrations.
 - Text fallback for every MCP App card (Claude sandbox may block React rendering).
 
+## Commands (Pipeline)
+- `npx tsx scripts/test-intent-accuracy.ts` — Run 200-query accuracy test (>90% target)
+- `npx tsx scripts/seed-miami.ts --dry-run` — Dry-run provider data seed
+- `SUPABASE_URL=x SUPABASE_SERVICE_ROLE_KEY=y GOOGLE_PLACES_API_KEY=z YELP_API_KEY=w npx tsx scripts/seed-miami.ts` — Real seed
+
 ## Current State
-- **Ring 1, Sprint 1** — Foundation complete. Mock data. 64 tests passing.
-- **Next:** Sprint 2 — Intent parser (Claude Sonnet) + provider data pipeline (Google Places, Yelp, FL DBPR).
+- **Ring 1, Sprint 1** — Foundation complete. Monorepo, schema, CI/CD.
+- **Ring 1, Sprint 2** — Complete. 148 tests passing.
+  - Smart intent parser (keyword-first, Claude Sonnet fallback)
+  - Google Places + Yelp + FL DBPR data pipelines
+  - Cross-source dedup (Jaro-Winkler + phone matching)
+  - Geocoding with Supabase cache
+  - Real `service_search` wired: parse → geocode → PostGIS → rank → top 3 → analytics
+  - Cron-triggered pipeline orchestration
+  - 200-query accuracy harness (100% category accuracy)
+  - Miami seed script with --dry-run
+- **Next:** Sprint 3 — End-to-end MCP App card rendering in Claude, contact deep links, error states, polish.
 
 ## Architecture Decisions
 - **3 trades:** HVAC + Plumbing + Electrical for Miami launch
