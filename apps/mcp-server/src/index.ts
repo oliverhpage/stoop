@@ -42,4 +42,19 @@ export default {
 
     return new Response("Stoop MCP Server - Ring 1");
   },
+
+  async scheduled(event: ScheduledEvent, env: Record<string, string>, ctx: ExecutionContext) {
+    const { handleScheduled } = await import("./pipeline/cron-handler");
+    await handleScheduled(event.cron, {
+      runGooglePlaces: async () => {
+        /* TODO: wire to real pipeline in production */
+      },
+      runYelp: async () => {
+        /* TODO: wire to real pipeline in production */
+      },
+      runDbpr: async () => {
+        /* TODO: wire to real pipeline in production */
+      },
+    });
+  },
 };
