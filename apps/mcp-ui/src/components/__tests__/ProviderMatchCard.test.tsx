@@ -45,10 +45,12 @@ describe("ProviderMatchCard", () => {
     expect(screen.getByText("License check pending")).toBeInTheDocument();
   });
 
-  it("contact button has tel: href", () => {
+  it("renders Call and Text contact buttons", () => {
     render(<ProviderMatchCard provider={makeProvider()} />);
-    const link = screen.getByRole("link", { name: /contact now/i });
-    expect(link).toHaveAttribute("href", "tel:+15551234567");
+    const callLink = screen.getByRole("link", { name: /Call/ });
+    expect(callLink).toHaveAttribute("href", "tel:+15551234567");
+    const textLink = screen.getByRole("link", { name: /Text/ });
+    expect(textLink.getAttribute("href")).toContain("sms:+15551234567");
   });
 
   it("shows price range", () => {

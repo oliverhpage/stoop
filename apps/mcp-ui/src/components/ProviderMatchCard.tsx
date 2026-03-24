@@ -1,26 +1,19 @@
 import React from "react";
 import type { ProviderMatch } from "@stoop/shared";
 import { TrustBadge } from "../shared/TrustBadge";
+import { ContactButton } from "./ContactButton";
 import { colors, spacing } from "../shared/design-tokens";
 
 export interface ProviderMatchCardProps {
   provider: ProviderMatch;
+  urgency?: "emergency" | "soon" | "planned";
 }
 
-function getContactHref(provider: ProviderMatch): string | null {
+function getPhone(provider: ProviderMatch): string | null {
   const phone = provider.contact_methods.find(
     (m) => m.type === "phone" || m.type === "sms",
   );
-  if (!phone) return null;
-
-  if (phone.type === "sms") {
-    const body = encodeURIComponent(
-      `Hi ${provider.name}, I found you on Stoop and would like to discuss a service request.`,
-    );
-    return `sms:${phone.value}?body=${body}`;
-  }
-
-  return `tel:${phone.value}`;
+  return phone?.value ?? null;
 }
 
 function formatPriceRange(range: ProviderMatch["price_range"]): string {
@@ -28,8 +21,8 @@ function formatPriceRange(range: ProviderMatch["price_range"]): string {
   return `$${range.low}\u2013$${range.high}`;
 }
 
-export function ProviderMatchCard({ provider }: ProviderMatchCardProps) {
-  const contactHref = getContactHref(provider);
+export function ProviderMatchCard({ provider, urgency = "planned" }: ProviderMatchCardProps) {
+  const phone = getPhone(provider);
 
   return (
     <div
@@ -80,24 +73,12 @@ export function ProviderMatchCard({ provider }: ProviderMatchCardProps) {
         {formatPriceRange(provider.price_range)}
       </div>
 
-      {contactHref && (
-        <a
-          href={contactHref}
-          style={{
-            display: "inline-block",
-            textAlign: "center",
-            padding: `${spacing.sm}px ${spacing.base}px`,
-            borderRadius: 8,
-            backgroundColor: colors.brandPrimary,
-            color: "#FFFFFF",
-            fontWeight: 600,
-            fontSize: 14,
-            textDecoration: "none",
-          }}
-        >
-          Contact Now
-        </a>
-      )}
+      <ContactButton
+        phone={phone}
+        providerName={provider.name}
+        serviceType={provider.trade_category}
+        urgency={urgency}
+      />
     </div>
   );
 }
