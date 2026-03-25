@@ -93,7 +93,7 @@ export async function fetchGooglePlaces(
           locationRestriction: {
             circle: {
               center: { latitude: center.lat, longitude: center.lng },
-              radiusMeters: 24140,
+              radius: 24140.0,
             },
           },
           maxResultCount: 20,

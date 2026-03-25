@@ -83,6 +83,40 @@ async function main() {
     console.log("\n⚠️  YELP_API_KEY not set — skipping Yelp");
   }
 
+  // Phase 2.5: Filter to home service categories only
+  const HOME_SERVICE_CATS = new Set([
+    "plumber", "plumbing", "hvac", "hvacr", "electrician", "electricians",
+    "electrical", "hvac_contractor", "heating", "air_conditioning",
+    "waterheaterinstallrepair", "hydrojetting", "septicservices",
+    "generatorinstallrepair", "handyman", "contractors", "roofing",
+    "damagerestoration", "pressurewashers", "backflowservices",
+    "gutterservices", "airductcleaning", "solarinstallation",
+    "home_inspectors", "fencesgates", "drywall", "tiling", "carpenters",
+    "flooring", "irrigation", "poolservice", "painters",
+  ]);
+
+  const filterToHomeServices = (providers: RawProviderData[]) =>
+    providers.filter((p) => p.categories.some((c) => HOME_SERVICE_CATS.has(c.toLowerCase())));
+
+  googleProviders = filterToHomeServices(googleProviders);
+  yelpProviders = filterToHomeServices(yelpProviders);
+  console.log(`\n🔧 After filtering to home services: ${googleProviders.length} Google + ${yelpProviders.length} Yelp`);
+
+  // Normalize categories to our trade names
+  const normalizeCats = (cats: string[]): string[] => {
+    const mapped = new Set<string>();
+    for (const c of cats) {
+      const lower = c.toLowerCase();
+      if (["plumber", "plumbing", "hydrojetting", "septicservices", "waterheaterinstallrepair", "backflowservices"].includes(lower)) mapped.add("plumbing");
+      if (["hvac", "hvacr", "hvac_contractor", "heating", "air_conditioning", "airductcleaning"].includes(lower)) mapped.add("hvac");
+      if (["electrician", "electricians", "electrical", "generatorinstallrepair", "solarinstallation"].includes(lower)) mapped.add("electrical");
+    }
+    return mapped.size > 0 ? [...mapped] : cats;
+  };
+
+  googleProviders = googleProviders.map((p) => ({ ...p, categories: normalizeCats(p.categories) }));
+  yelpProviders = yelpProviders.map((p) => ({ ...p, categories: normalizeCats(p.categories) }));
+
   // Phase 3: Deduplicate
   console.log("\n🔗 Deduplicating...");
   const all = [...googleProviders, ...yelpProviders];
@@ -119,28 +153,22 @@ async function main() {
     let errors = 0;
 
     for (const p of unique) {
-      // Determine onConflict column based on source
-      const conflictCol = p.google_place_id ? "google_place_id" : "yelp_id";
-
-      const { error } = await supabase.from("providers").upsert(
-        {
-          name: p.name,
-          google_place_id: p.google_place_id ?? null,
-          yelp_id: p.yelp_id ?? null,
-          phone: p.phone,
-          address: p.address,
-          location_geo: `SRID=4326;POINT(${p.lng} ${p.lat})`,
-          categories: p.categories,
-          avg_rating: p.avg_rating,
-          review_count: p.review_count,
-          price_range_low: null,
-          price_range_high: null,
-          hours: p.hours ?? null,
-          photos: p.photos ?? [],
-          data_freshness_at: new Date().toISOString(),
-        },
-        { onConflict: conflictCol },
-      );
+      const { error } = await supabase.from("providers").insert({
+        name: p.name,
+        google_place_id: p.google_place_id ?? null,
+        yelp_id: p.yelp_id ?? null,
+        phone: p.phone,
+        address: p.address,
+        location_geo: `SRID=4326;POINT(${p.lng} ${p.lat})`,
+        categories: p.categories,
+        avg_rating: p.avg_rating,
+        review_count: p.review_count,
+        price_range_low: null,
+        price_range_high: null,
+        hours: p.hours ?? null,
+        photos: p.photos ?? [],
+        data_freshness_at: new Date().toISOString(),
+      });
 
       if (error) {
         errors++;
