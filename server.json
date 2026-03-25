@@ -1,0 +1,16 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.oliverhpage/stoop",
+  "description": "Find licensed HVAC, plumbing, and electrical providers in Miami with verified ratings.",
+  "repository": {
+    "url": "https://github.com/oliverhpage/stoop",
+    "source": "github"
+  },
+  "version": "1.0.0",
+  "remotes": [
+    {
+      "type": "streamable-http",
+      "url": "https://stoop-mcp-server.stoop.workers.dev/mcp"
+    }
+  ]
+}
